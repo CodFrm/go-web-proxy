@@ -1,0 +1,14 @@
+
+proto: https
+
+port: 23914
+
+pemPath: ./certs/server.crt
+
+keyPath: ./certs/server.key
+
+# https代理只能检测到域名
+whitelist:
+  - "*.ip138.com"
+  - "chrome.google.com"
+
