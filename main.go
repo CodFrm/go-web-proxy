@@ -16,6 +16,10 @@ import (
 
 func checkUrl(url string) bool {
 	flag := false
+	port := strings.LastIndex(url, ":")
+	if port != -1 {
+		url = url[:port]
+	}
 	for _, v := range Config.Whitelist {
 		if ok, _ := regexp.MatchString(v, url); ok {
 			flag = true
@@ -27,7 +31,7 @@ func checkUrl(url string) bool {
 
 func handleTunneling(w http.ResponseWriter, req *http.Request) {
 	//设置超时防止大量超时导致服务器资源不大量占用
-	log.Printf("proxy %v", req.RequestURI)
+	log.Printf("tunneling proxy %v", req.RequestURI)
 	if !checkUrl(req.RequestURI) {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("<h1>此链接不在代理白名单之内</h1>"))
@@ -63,7 +67,7 @@ func transfer(destination io.WriteCloser, source io.ReadCloser) {
 
 func handleHTTP(w http.ResponseWriter, req *http.Request) {
 	//校验白名单
-	log.Printf("proxy %v", req.RequestURI)
+	log.Printf("http proxy %v", req.RequestURI)
 	if !checkUrl(req.RequestURI) {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("<h1>此链接不在代理白名单之内</h1>"))
@@ -112,7 +116,7 @@ func main() {
 	}
 	for k, v := range Config.Whitelist {
 		Config.Whitelist[k] = strings.ReplaceAll(v, "/", "\\/")
-		Config.Whitelist[k] = strings.ReplaceAll(v, "*", ".*")
+		Config.Whitelist[k] = "^" + strings.ReplaceAll(v, "*", ".*") + "$"
 	}
 	server := &http.Server{
 		Addr: ":" + strconv.Itoa(Config.Port),
